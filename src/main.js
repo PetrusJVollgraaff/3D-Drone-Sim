@@ -1,5 +1,6 @@
 import { Camera } from "./JS/Camera";
 import { Drone } from "./JS/Drone";
+import { Points } from "./JS/points";
 import { Vector2 } from "./JS/Vector2";
 
 class Game {
@@ -12,6 +13,7 @@ class Game {
     }),
     areaSize: 1000,
   };
+  #minDistBetween = 25;
 
   #mainCanvas = document.getElementById("main-canvas");
   #mainCtx = this.#mainCanvas.getContext("2d");
@@ -38,6 +40,22 @@ class Game {
       target: this.#Drone,
       center: new Vector2(Object.assign({}, this.#size.center, {})),
     });
+
+    const bounds = this.#setBounds();
+    const treeCount = 50;
+
+    this.locations = this.#generateItems(treeCount, bounds);
+    this.points = this.locations.map((center) => new Points(center));
+  }
+
+  #setBounds() {
+    const { center, areaSize } = this.#size;
+    return {
+      top: center.y - areaSize / 2,
+      right: center.x + areaSize / 2,
+      left: center.x - areaSize / 2,
+      bottom: center.y + areaSize / 2,
+    };
   }
 
   start() {
@@ -51,6 +69,7 @@ class Game {
 
   #draw() {
     this.#Drone.draw(this.#mapCtx);
+    this.points.forEach((p) => p.draw(this.#mapCtx));
     //this.#Camera.draw(this.#mainCtx);
   }
 
@@ -68,6 +87,38 @@ class Game {
 
     requestAnimationFrame(() => this.#animate());
   }
+
+  #generateItems(count, bounds) {
+    const locations = [];
+
+    for (let i = 0; i < count; i++) {
+      const center = new Vector2({
+        x: lerp(bounds.left, bounds.right, Math.random()),
+        y: lerp(bounds.top, bounds.bottom, Math.random()),
+      });
+
+      const centers = locations.map((item) => item.center);
+      centers.push(this.#Drone.getCenter);
+
+      const nearbyTree = centers.find((item) => {
+        if (item) {
+          return distance(center, item) < this.#minDistBetween;
+        }
+      });
+
+      !nearbyTree && locations.push(center);
+    }
+
+    return locations;
+  }
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function distance(p1, p2) {
+  return Math.hypot(p1.x - p2.x, p1.y - p2.y);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
