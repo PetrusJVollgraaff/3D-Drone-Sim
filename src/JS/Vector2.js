@@ -20,7 +20,7 @@ class Vector2 {
     const minX = Math.min(...vectors.map((p) => p.x));
     const maxX = Math.max(...vectors.map((p) => p.x));
     const minY = Math.min(...vectors.map((p) => p.y));
-    const maxY = Math.min(...vectors.map((p) => p.y));
+    const maxY = Math.max(...vectors.map((p) => p.y));
 
     return new Vector2({
       x: minX + (maxX - minX) / 2,
@@ -65,7 +65,7 @@ class Vector2 {
 
   static bottomRight(vectors) {
     let bottomRight = vectors[0];
-    for (const vector of vectors) bottomRight = bottomRight.min(vector);
+    for (const vector of vectors) bottomRight = bottomRight.max(vector);
 
     return bottomRight;
   }
@@ -75,22 +75,22 @@ class Vector2 {
   }
 
   static rotateAroundCenter(v, center, angle) {
-    let { x, y } = new Vector2({ x: v.x - center.x, y: v.y - center.y });
+    let { x, y } = Vector2.subtract(v, center);
 
     let rotated = {
       x: x * Math.cos(angle) - y * Math.sin(angle),
       y: y * Math.sin(angle) - x * Math.cos(angle),
     };
 
-    return new Vector2({ x: rotated.x - center.x, y: rotated.y - center.y });
+    return Vector2.subtract(rotated, center);
   }
 
   static distance(v1, v2) {
-    return Math.sqrt(Math.pow(v1.x - v2.x, 2) + Math.pow(v1.y - v2.y, 2));
+    return v1.subtract(v2).magnitude();
   }
 
   static toXY({ dir, mag }) {
-    new Vector2({ x: mag * Math.cos(dir), y: mag * Math.sin(dir) });
+    return new Vector2({ x: mag * Math.cos(dir), y: mag * Math.sin(dir) });
   }
 
   add(v) {
@@ -102,7 +102,7 @@ class Vector2 {
   }
 
   magnitude() {
-    return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
+    return Math.sqrt(this.x ** 2 + this.y ** 2);
   }
 
   scale(scaler) {
@@ -118,7 +118,12 @@ class Vector2 {
   }
 
   dot(v) {
-    return this.x * v.x + this.y * v2.y;
+    return this.x * v.x + this.y * v.y;
+  }
+
+  normalize() {
+    const mag = this.magnitude();
+    return mag === 0 ? Vector2.zero() : this.scale(1 / mag);
   }
 
   direction() {
@@ -130,8 +135,11 @@ class Vector2 {
   }
 
   toXY({ dir, mag }) {
-    this.x = mag * Math.cos(dir);
-    this.y = mag * Math.sin(dir);
+    return new Vector2({ x: mag * Math.cos(dir), y: mag * Math.sin(dir) });
+  }
+
+  clone() {
+    return new Vector2(this);
   }
 }
 
