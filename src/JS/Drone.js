@@ -1,5 +1,5 @@
 import { Controls } from "./Controls";
-import { Vector2 } from "./Vector";
+import { Vector2 } from "./Vector2";
 
 class Drone {
   #Options = {
@@ -25,7 +25,9 @@ class Drone {
   #speed = 0;
   #dir = -Math.PI / 2;
   #controls = new Controls();
-  constructor() {}
+  constructor(center = Vector2.zero()) {
+    this.#center = center;
+  }
 
   get getCenter() {
     return this.#center;
@@ -35,12 +37,44 @@ class Drone {
     return this.#dir;
   }
 
-  update() {}
+  update() {
+    const { left, right, up, down, forward, backward } =
+      this.#controls.getcontrols;
+    const { epsilon, friction, maxSpeed, speedChange, dirChange } =
+      this.#Options;
+
+    left && (this.#dir -= dirChange);
+    right && (this.#dir += dirChange);
+
+    forward && (this.#speed += speedChange);
+    backward && (this.#speed -= speedChange);
+
+    if (this.#speed > 0) {
+      this.#speed -= friction;
+    } else if (this.#speed < 0) {
+      this.#speed += friction;
+    }
+
+    Math.abs(this.#speed) < epsilon && (this.#speed = 0);
+
+    if (this.#speed > maxSpeed) {
+      this.#speed = maxSpeed;
+    } else if (this.#speed < -maxSpeed) {
+      this.#speed = -maxSpeed;
+    }
+
+    this.#center = this.#center.add(
+      Vector2.toXY({
+        dir: this.#dir,
+        mag: this.#speed,
+      }),
+    );
+  }
 
   draw(ctx) {
     this.path = new Path2D();
     const { x, y } = this.#center;
-    const radius = size / 2;
+    const radius = this.#size / 2;
 
     ctx.save();
     ctx.translate(x, y);

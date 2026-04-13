@@ -1,40 +1,57 @@
 import { Camera } from "./JS/Camera";
 import { Drone } from "./JS/Drone";
-import { Vector2 } from "./JS/Vector";
+import { Vector2 } from "./JS/Vector2";
 
 class Game {
-  #mainCanvas = document.getElementById("main-canvas");
-  #mainCtx = this.#mainCanvas.getContext("2d");
   #size = {
     width: window.innerWidth,
     height: window.innerHeight,
-    center: Vector2.zero(),
+    center: new Vector2({
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+    }),
     areaSize: 1000,
   };
 
+  #mainCanvas = document.getElementById("main-canvas");
+  #mainCtx = this.#mainCanvas.getContext("2d");
+  #mapCanvas = document.getElementById("map-canvas");
+  #mapCtx = this.#mapCanvas.getContext("2d");
+
   #Drone = null;
   #Camera = null;
-  constructor() {
-    this.#mainCanvas.width = this.#size.width;
+  #debug = false;
+  constructor(debug = false) {
+    this.#debug = debug;
+    if (debug) this.#size.center.x = this.#size.width / 4;
+
+    this.#mainCanvas.width = debug ? this.#size.width / 2 : this.#size.width;
     this.#mainCanvas.height = this.#size.height;
 
-    this.#Drone = new Drone();
+    this.#mapCanvas.width = debug ? this.#size.width / 2 : this.#size.width;
+    this.#mapCanvas.height = this.#size.height;
+
+    this.#Drone = new Drone(
+      new Vector2(Object.assign({}, this.#size.center, {})),
+    );
     this.#Camera = new Camera({
       target: this.#Drone,
-      center: Object.assign({}, this.#size.center, {}),
+      center: new Vector2(Object.assign({}, this.#size.center, {})),
     });
   }
 
-  start() {}
+  start() {
+    this.#animate();
+  }
 
   #updates() {
     this.#Drone.update();
-    return this.#Camera.update();
+    //return this.#Camera.update();
   }
 
   #draw() {
-    this.#Drone.draw(this.#mainCtx);
-    this.#Camera.draw(this.#mainCtx);
+    this.#Drone.draw(this.#mapCtx);
+    //this.#Camera.draw(this.#mainCtx);
   }
 
   #render(fov) {
@@ -43,13 +60,16 @@ class Game {
 
   #animate() {
     const { width, height } = this.#size;
-    this.#mainCtx.clearRect(0, 0, width, height);
+    this.#mapCtx.clearRect(0, 0, this.#debug ? width / 2 : width, height);
 
     const fov = this.#updates();
+    //this.#render(fov)
     this.#draw();
 
     requestAnimationFrame(() => this.#animate());
   }
 }
 
-new Game();
+document.addEventListener("DOMContentLoaded", () => {
+  new Game(true).start();
+});

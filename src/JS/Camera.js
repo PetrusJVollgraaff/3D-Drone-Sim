@@ -1,4 +1,4 @@
-import { Vector2 } from "./Vector";
+import { Vector2 } from "./Vector2";
 
 class Camera {
   static maxViewDist = 1000;

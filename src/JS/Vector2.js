@@ -77,10 +77,10 @@ class Vector2 {
   static rotateAroundCenter(v, center, angle) {
     let { x, y } = Vector2.subtract(v, center);
 
-    let rotated = {
+    let rotated = new Vector2({
       x: x * Math.cos(angle) - y * Math.sin(angle),
       y: y * Math.sin(angle) - x * Math.cos(angle),
-    };
+    });
 
     return Vector2.subtract(rotated, center);
   }
